@@ -2,9 +2,9 @@ const Application = require("../models/application.model");
 const Job = require("../models/job.model");
 const User = require("../models/user.model");
 
-const {
-  calculateATSScore,
-} = require("../services/ats.service");
+const { calculateATSScore } = require("../services/ats.service");
+
+const { createNotification } = require("../services/notification.service");
 
 exports.applyJob = async (req, res) => {
   try {
@@ -31,48 +31,35 @@ exports.applyJob = async (req, res) => {
       });
     }
 
-    const candidate = await User.findById(
-      req.user.id
-    );
+    const candidate = await User.findById(req.user.id);
 
-    const {
-      score,
-      matchedSkills,
-    } = calculateATSScore(
+    const { score, matchedSkills } = calculateATSScore(
       candidate.parsedSkills || [],
-      job.skillsRequired || []
+      job.skillsRequired || [],
     );
 
     // Debug Logs
-    console.log(
-      "CANDIDATE SKILLS:",
-      candidate.parsedSkills
-    );
-    console.log(
-      "JOB SKILLS:",
-      job.skillsRequired
-    );
-    console.log(
-      "ATS SCORE:",
-      score
-    );
-    console.log(
-      "MATCHED SKILLS:",
-      matchedSkills
-    );
+    console.log("CANDIDATE SKILLS:", candidate.parsedSkills);
+    console.log("JOB SKILLS:", job.skillsRequired);
+    console.log("ATS SCORE:", score);
+    console.log("MATCHED SKILLS:", matchedSkills);
 
-    const application =
-      await Application.create({
-        candidate: req.user.id,
-        job: jobId,
-        atsScore: score,
-        matchedSkills,
-      });
+    const application = await Application.create({
+      candidate: req.user.id,
+      job: jobId,
+      atsScore: score,
+      matchedSkills,
+    });
+
+    await createNotification(
+      job.recruiter,
+      "New Application",
+      `${candidate.name} applied for ${job.title}`,
+    );
 
     res.status(201).json({
       success: true,
-      message:
-        "Application submitted successfully",
+      message: "Application submitted successfully",
       application,
     });
   } catch (error) {
@@ -83,19 +70,15 @@ exports.applyJob = async (req, res) => {
   }
 };
 
-exports.getMyApplications = async (
-  req,
-  res
-) => {
+exports.getMyApplications = async (req, res) => {
   try {
-    const applications =
-      await Application.find({
-        candidate: req.user.id,
-      })
-        .populate("job")
-        .sort({
-          createdAt: -1,
-        });
+    const applications = await Application.find({
+      candidate: req.user.id,
+    })
+      .populate("job")
+      .sort({
+        createdAt: -1,
+      });
 
     res.status(200).json({
       success: true,
@@ -109,10 +92,7 @@ exports.getMyApplications = async (
   }
 };
 
-exports.getJobApplicants = async (
-  req,
-  res
-) => {
+exports.getJobApplicants = async (req, res) => {
   try {
     const jobId = req.params.jobId;
 
@@ -126,41 +106,24 @@ exports.getJobApplicants = async (
     }
 
     console.log("USER:", req.user);
-    console.log(
-      "ROLE:",
-      req.user.role
-    );
-    console.log(
-      "JOB RECRUITER:",
-      job.recruiter.toString()
-    );
-    console.log(
-      "REQUEST USER:",
-      req.user.id
-    );
+    console.log("ROLE:", req.user.role);
+    console.log("JOB RECRUITER:", job.recruiter.toString());
+    console.log("REQUEST USER:", req.user.id);
 
-    if (
-      job.recruiter.toString() !==
-        req.user.id &&
-      req.user.role !== "admin"
-    ) {
+    if (job.recruiter.toString() !== req.user.id && req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
         message: "Unauthorized",
       });
     }
 
-    const applications =
-      await Application.find({
-        job: jobId,
-      })
-        .populate(
-          "candidate",
-          "name email resume parsedSkills"
-        )
-        .sort({
-          atsScore: -1,
-        });
+    const applications = await Application.find({
+      job: jobId,
+    })
+      .populate("candidate", "name email resume parsedSkills")
+      .sort({
+        atsScore: -1,
+      });
 
     res.status(200).json({
       success: true,
@@ -177,84 +140,74 @@ exports.getJobApplicants = async (
   }
 };
 
-exports.updateApplicationStatus =
-  async (req, res) => {
-    try {
-      const application =
-        await Application.findById(
-          req.params.applicationId
-        );
+exports.updateApplicationStatus = async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.applicationId);
 
-      if (!application) {
-        return res.status(404).json({
-          success: false,
-          message:
-            "Application not found",
-        });
-      }
-
-      const allowedStatuses = [
-        "pending",
-        "reviewing",
-        "shortlisted",
-        "rejected",
-        "selected",
-      ];
-
-      if (
-        !allowedStatuses.includes(
-          req.body.status
-        )
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Invalid status",
-        });
-      }
-
-      application.status =
-        req.body.status;
-
-      await application.save();
-
-      res.status(200).json({
-        success: true,
-        message:
-          "Status updated successfully",
-        application,
-      });
-    } catch (error) {
-      res.status(500).json({
+    if (!application) {
+      return res.status(404).json({
         success: false,
-        message: error.message,
+        message: "Application not found",
       });
     }
-  };
 
-exports.getRankedApplicants =
-  async (req, res) => {
-    try {
-      const applications =
-        await Application.find({
-          job: req.params.jobId,
-        })
-          .populate(
-            "candidate",
-            "name email parsedSkills"
-          )
-          .sort({
-            atsScore: -1,
-          });
+    const allowedStatuses = [
+      "pending",
+      "reviewing",
+      "shortlisted",
+      "rejected",
+      "selected",
+    ];
 
-      res.status(200).json({
-        success: true,
-        applications,
-      });
-    } catch (error) {
-      res.status(500).json({
+    if (!allowedStatuses.includes(req.body.status)) {
+      return res.status(400).json({
         success: false,
-        message: error.message,
+        message: "Invalid status",
       });
     }
-  };
+
+    application.status = req.body.status;
+
+    await application.save();
+
+    // Notify candidate in real-time
+    await createNotification(
+      application.candidate.toString(),
+      "Application Updated",
+      `Your application status is now ${application.status}`,
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Status updated successfully",
+      application,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.getRankedApplicants = async (req, res) => {
+  try {
+    const applications = await Application.find({
+      job: req.params.jobId,
+    })
+      .populate("candidate", "name email parsedSkills")
+      .sort({
+        atsScore: -1,
+      });
+
+    res.status(200).json({
+      success: true,
+      applications,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

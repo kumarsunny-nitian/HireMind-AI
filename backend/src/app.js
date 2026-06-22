@@ -8,6 +8,9 @@ const jobRoutes = require("./routes/job.routes");
 const applicationRoutes = require("./routes/application.routes");
 const resumeRoutes = require("./routes/resume.routes");
 const aiRoutes = require("./routes/ai.routes");
+const interviewRoutes = require("./routes/interview.routes");
+const notificationRoutes = require("./routes/notification.routes");
+const analyticsRoutes = require("./routes/analytics.routes");
 
 console.log("✅ testRoutes imported");
 console.log("✅ applicationRoutes imported");
@@ -50,6 +53,14 @@ app.use("/api/v1/applications", applicationRoutes);
 // Resume Routes
 app.use("/api/v1/resume", resumeRoutes);
 
+// AI Routes
 app.use("/api/v1/ai", aiRoutes);
+
+// Interview Routes
+app.use("/api/v1/interviews", interviewRoutes);
+
+app.use("/api/v1/notifications", notificationRoutes);
+
+app.use("/api/v1/analytics", analyticsRoutes);
 
 module.exports = app;
