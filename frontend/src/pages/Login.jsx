@@ -21,17 +21,24 @@ function Login() {
     e.preventDefault();
 
     try {
+      console.log("API URL:", import.meta.env.VITE_API_URL);
+
       const res = await api.post("/auth/login", formData);
 
-      alert("Login Successful");
+      console.log("FULL RESPONSE:", res.data);
+      console.log("TOKEN:", res.data.token);
 
       localStorage.setItem("token", res.data.token);
 
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
+      console.log("AFTER SAVE TOKEN:", localStorage.getItem("token"));
+
+      alert("Login Successful");
+
       navigate("/dashboard");
     } catch (error) {
-      console.log(error.response?.data);
+      console.log("LOGIN ERROR:", error.response?.data);
 
       alert(JSON.stringify(error.response?.data));
     }
