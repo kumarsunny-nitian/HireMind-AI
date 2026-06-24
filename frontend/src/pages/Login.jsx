@@ -26,21 +26,24 @@ function Login() {
       const res = await api.post("/auth/login", formData);
 
       console.log("FULL RESPONSE:", res.data);
+
       console.log("TOKEN:", res.data.token);
 
       localStorage.setItem("token", res.data.token);
 
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      console.log("AFTER SAVE TOKEN:", localStorage.getItem("token"));
+      console.log("SAVED TOKEN:", localStorage.getItem("token"));
+
+      console.log("SAVED USER:", localStorage.getItem("user"));
 
       alert("Login Successful");
 
       navigate("/dashboard");
     } catch (error) {
-      console.log("LOGIN ERROR:", error.response?.data);
+      console.log("LOGIN ERROR:", error.response?.data || error.message);
 
-      alert(JSON.stringify(error.response?.data));
+      alert(JSON.stringify(error.response?.data || error.message));
     }
   };
 

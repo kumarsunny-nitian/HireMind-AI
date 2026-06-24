@@ -12,6 +12,11 @@ exports.applyJob = async (req, res) => {
 
     const job = await Job.findById(jobId);
 
+    const jobMatchPercentage =
+      job.skillsRequired.length > 0
+        ? Math.round((matchedSkills.length / job.skillsRequired.length) * 100)
+        : 0;
+
     if (!job) {
       return res.status(404).json({
         success: false,
@@ -47,8 +52,9 @@ exports.applyJob = async (req, res) => {
     const application = await Application.create({
       candidate: req.user.id,
       job: jobId,
-      atsScore: score,
+      atsScore,
       matchedSkills,
+      jobMatchPercentage,
     });
 
     await createNotification(
@@ -140,6 +146,8 @@ exports.getJobApplicants = async (req, res) => {
   }
 };
 
+const { getIO } = require("../config/socket");
+
 exports.updateApplicationStatus = async (req, res) => {
   try {
     const application = await Application.findById(req.params.applicationId);
@@ -170,12 +178,24 @@ exports.updateApplicationStatus = async (req, res) => {
 
     await application.save();
 
-    // Notify candidate in real-time
+    // Save notification in database
     await createNotification(
       application.candidate.toString(),
       "Application Updated",
       `Your application status is now ${application.status}`,
     );
+
+    // Real-time Socket.IO notification
+    const io = getIO();
+
+    io.to(application.candidate.toString()).emit("notification", {
+      title: "Application Updated",
+      message: `Your application status is now ${application.status}`,
+      status: application.status,
+      applicationId: application._id,
+    });
+
+    console.log(`Notification sent to candidate ${application.candidate}`);
 
     res.status(200).json({
       success: true,

@@ -33,6 +33,11 @@ const applicationSchema = new mongoose.Schema(
       default: [],
     },
 
+    jobMatchPercentage: {
+      type: Number,
+      default: 0,
+    },
+
     status: {
       type: String,
       enum: ["pending", "reviewing", "shortlisted", "rejected", "selected"],

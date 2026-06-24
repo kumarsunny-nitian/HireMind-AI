@@ -10,30 +10,25 @@ const initializeSocket = (server) => {
   });
 
   io.on("connection", (socket) => {
-    console.log(
-      `User Connected: ${socket.id}`
-    );
+    console.log(`User Connected: ${socket.id}`);
 
     socket.on("join", (userId) => {
+      console.log("JOIN EVENT RECEIVED:", userId);
+
       socket.join(userId);
-      console.log(
-        `User joined room ${userId}`
-      );
+
+      console.log(`User joined room ${userId}`);
     });
 
     socket.on("disconnect", () => {
-      console.log(
-        `User Disconnected: ${socket.id}`
-      );
+      console.log(`User Disconnected: ${socket.id}`);
     });
   });
 };
 
 const getIO = () => {
   if (!io) {
-    throw new Error(
-      "Socket.IO not initialized"
-    );
+    throw new Error("Socket.IO not initialized");
   }
 
   return io;
