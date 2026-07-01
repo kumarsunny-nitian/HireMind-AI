@@ -42,7 +42,7 @@ function Interviews() {
   return (
     <>
       <Navbar />
-      <div className="w-full max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto px-6 py-6">
         {" "}
         <h1 className="text-3xl font-bold mb-6">Interview Management</h1>
         <div className="grid gap-6">

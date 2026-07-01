@@ -1,3 +1,5 @@
+// ai.Analysis.service.js
+
 const OpenAI = require("openai");
 
 const openai = new OpenAI({
@@ -45,29 +47,61 @@ Return JSON format:
       },
     });
 
-    return JSON.parse(
-      response.choices[0].message.content
-    );
+    return JSON.parse(response.choices[0].message.content);
   } catch (error) {
     console.error("AI Analysis Error:", error.message);
 
-    // Fallback response when OpenAI fails
+    const candidateSkills = candidate.skills || [];
+    const requiredSkills = job.skillsRequired || [];
+
+    const matchedSkills = candidateSkills.filter((skill) =>
+      requiredSkills.some(
+        (required) => required.toLowerCase() === skill.toLowerCase(),
+      ),
+    );
+
+    const missingSkills = requiredSkills.filter(
+      (skill) =>
+        !candidateSkills.some(
+          (candidateSkill) =>
+            candidateSkill.toLowerCase() === skill.toLowerCase(),
+        ),
+    );
+
+    const score =
+      requiredSkills.length > 0
+        ? Math.round((matchedSkills.length / requiredSkills.length) * 100)
+        : 80;
+
     return {
-      summary: `${candidate.name} appears to be a suitable candidate for ${job.title}.`,
-      strengths: candidate.skills || [],
-      weaknesses: [
-        "Resume requires deeper evaluation",
-        "Practical assessment recommended",
-      ],
-      recommendation: "Proceed to Interview",
+      summary: `${candidate.name} has ${matchedSkills.length} matching skills out of ${requiredSkills.length} required for the ${job.title} position.`,
+
+      strengths:
+        matchedSkills.length > 0
+          ? matchedSkills
+          : ["Basic technical knowledge"],
+
+      weaknesses:
+        missingSkills.length > 0
+          ? missingSkills
+          : ["No major weaknesses detected"],
+
+      recommendation:
+        score >= 80
+          ? "Strongly Recommended"
+          : score >= 60
+            ? "Recommended for Interview"
+            : "Needs Additional Screening",
+
       interviewQuestions: [
-        "Explain your most challenging project.",
-        "What is JWT Authentication?",
-        "How does MongoDB indexing work?",
-        "Explain React component lifecycle.",
-        "How would you optimize API performance?",
+        `Explain your experience with ${requiredSkills[0] || "JavaScript"}.`,
+        `Describe a project related to ${job.title}.`,
+        "How do you solve difficult bugs?",
+        "Explain REST API design.",
+        "Describe your biggest technical challenge.",
       ],
-      aiScore: 75,
+
+      aiScore: score,
     };
   }
 };

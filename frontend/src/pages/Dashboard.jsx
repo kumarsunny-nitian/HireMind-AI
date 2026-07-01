@@ -3,6 +3,13 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import socket from "../services/socket";
 import Navbar from "../components/Navbar";
+import QuickActions from "../dashboard/QuickActions";
+import StatsCards from "../dashboard/StatsCards";
+import WelcomeCard from "../dashboard/WelcomeCard";
+import Notifications from "../dashboard/Notifications";
+import AnalyticsChart from "../dashboard/AnalyticsChart";
+import DashboardSummary from "../dashboard/DashboardSummary";
+import RecentApplications from "../dashboard/RecentApplications";
 
 import {
   BarChart,
@@ -57,7 +64,6 @@ function Dashboard() {
 
     if (user?.id) {
       socket.emit("join", user.id);
-
       console.log("Joined notification room:", user.id);
     }
 
@@ -147,7 +153,6 @@ function Dashboard() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-
     navigate("/");
   };
 
@@ -164,159 +169,30 @@ function Dashboard() {
       <Navbar />
 
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-        <div className="w-full max-w-6xl mx-auto">
-          {/* User Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            {" "}
-            <h1 className="text-gray-800 dark:text-white">
-              {" "}
-              Welcome, {user?.name}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300">{user?.email}</p>
-            <p className="mt-2">
-              Role:
-              <span className="ml-2 font-semibold text-blue-600">
-                {user?.role}
-              </span>
-            </p>
-            {/* Notification Bell */}
-            <div className="absolute top-6 right-6">
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="relative text-2xl"
-              >
-                🔔
-                {unreadCount > 0 && (
-                  <span
-                    className="
-                    absolute
-                    -top-2
-                    -right-2
-                    bg-red-500
-                    text-white
-                    text-xs
-                    rounded-full
-                    px-2
-                  "
-                  >
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
+        <div className="max-w-screen-2xl mx-auto px-6 py-6">
+          <WelcomeCard
+            user={user}
+            unreadCount={unreadCount}
+            setShowNotifications={setShowNotifications}
+          />
 
-          {/* Notifications Dropdown */}
-          {showNotifications && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-6">
-              <h2 className="font-bold mb-3 dark:text-white"></h2>
-              {notifications.length === 0 ? (
-                <p className="dark:text-white">No notifications</p>
-              ) : (
-                notifications.map((n) => (
-                  <div
-                    key={n._id}
-                    onClick={() => !n.read && markAsRead(n._id)}
-                    className={`
-                    border-b
-                    py-2
-                    cursor-pointer
-                    hover:bg-gray-50
-                    px-2
-                    rounded
-                    ${!n.read ? "font-semibold" : ""}
-                  `}
-                  >
-                    <p>{n.title}</p>
+          <Notifications
+            notifications={notifications}
+            showNotifications={showNotifications}
+            markAsRead={markAsRead}
+          />
 
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      {n.message}
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
+          {/* Quick Actions */}
+          <QuickActions />
+
+          <StatsCards stats={stats} />
+
+          {(user?.role === "recruiter" || user?.role === "admin") && (
+            <RecentApplications />
           )}
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-blue-500 text-white p-6 rounded-xl shadow-lg cursor-pointer hover:scale-105 transition duration-300">
-              <h2 className="text-lg font-semibold">💼 Total Jobs</h2>
-
-              <p className="text-4xl font-bold mt-2">{stats.totalJobs}</p>
-            </div>
-
-            <div className="bg-green-500 text-white p-6 rounded-xl shadow-lg cursor-pointer hover:scale-105 transition duration-300">
-              <h2 className="text-lg font-semibold">📄 Applications</h2>
-
-              <p className="text-4xl font-bold mt-2">
-                {stats.totalApplications}
-              </p>
-            </div>
-
-            <div className="bg-yellow-500 text-white p-6 rounded-xl shadow-lg cursor-pointer hover:scale-105 transition duration-300">
-              <h2 className="text-lg font-semibold">⭐ Shortlisted</h2>
-
-              <p className="text-4xl font-bold mt-2">{stats.shortlisted}</p>
-            </div>
-
-            <div className="bg-purple-500 text-white p-6 rounded-xl shadow-lg cursor-pointer hover:scale-105 transition duration-300">
-              <h2 className="text-lg font-semibold">🎯 Selected</h2>
-
-              <p className="text-4xl font-bold mt-2">{stats.selected}</p>
-            </div>
-          </div>
-
-          {/* Dashboard Summary */}
-          <div className="mt-8 bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-2xl font-bold mb-4 dark:text-white">
-              Dashboard Summary
-            </h2>
-
-            {user?.role === "admin" || user?.role === "recruiter" ? (
-              <div>
-                <p className="mb-2">📌 Jobs Posted: {stats.totalJobs}</p>
-
-                <p className="mb-2">
-                  📄 Total Applications: {stats.totalApplications}
-                </p>
-
-                <p className="mb-2">
-                  ⭐ Shortlisted Candidates: {stats.shortlisted}
-                </p>
-
-                <p>🎯 Selected Candidates: {stats.selected}</p>
-              </div>
-            ) : (
-              <div>
-                <p className="mb-2">📌 Available Jobs: {stats.totalJobs}</p>
-
-                <p className="mb-2">
-                  📄 Applications Sent: {stats.totalApplications}
-                </p>
-
-                <p className="mb-2">⭐ Shortlisted: {stats.shortlisted}</p>
-
-                <p>🎯 Selected: {stats.selected}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Analytics Overview */}
-          <div className="mt-8bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h2 className="text-2xl font-bold mb-4">Analytics Overview</h2>
-
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#3B82F6" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+          <DashboardSummary stats={stats} />
+          <AnalyticsChart chartData={chartData} />
 
           {/* Logout Button */}
           <div className="mt-8">

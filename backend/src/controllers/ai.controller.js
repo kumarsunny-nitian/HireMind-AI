@@ -4,16 +4,14 @@ const User = require("../models/user.model");
 
 const Job = require("../models/job.model");
 
-const {
-  analyzeResume,
-} = require("../services/aiAnalysis.service");
+const { analyzeResume } = require("../services/aiAnalysis.service");
+
+const { generateCoverLetter } = require("../services/coverLetter.service");
 
 // Generate AI Analysis
 exports.analyzeCandidate = async (req, res) => {
   try {
-    const application = await Application.findById(
-      req.params.applicationId
-    );
+    const application = await Application.findById(req.params.applicationId);
 
     if (!application) {
       return res.status(404).json({
@@ -23,7 +21,7 @@ exports.analyzeCandidate = async (req, res) => {
     }
 
     // STEP 11: Return saved analysis if already exists
-    if (application.aiAnalysis) {
+    if (application.aiAnalysis && application.aiAnalysis.summary) {
       return res.status(200).json({
         success: true,
         cached: true,
@@ -31,9 +29,7 @@ exports.analyzeCandidate = async (req, res) => {
       });
     }
 
-    const candidate = await User.findById(
-      application.candidate
-    );
+    const candidate = await User.findById(application.candidate);
 
     if (!candidate) {
       return res.status(404).json({
@@ -42,9 +38,7 @@ exports.analyzeCandidate = async (req, res) => {
       });
     }
 
-    const job = await Job.findById(
-      application.job
-    );
+    const job = await Job.findById(application.job);
 
     if (!job) {
       return res.status(404).json({
@@ -53,10 +47,7 @@ exports.analyzeCandidate = async (req, res) => {
       });
     }
 
-    const aiResult = await analyzeResume(
-      candidate,
-      job
-    );
+    const aiResult = await analyzeResume(candidate, job);
 
     application.aiAnalysis = aiResult;
 
@@ -68,10 +59,7 @@ exports.analyzeCandidate = async (req, res) => {
       aiAnalysis: application.aiAnalysis,
     });
   } catch (error) {
-    console.error(
-      "AI Analysis Error:",
-      error
-    );
+    console.error("AI Analysis Error:", error);
 
     return res.status(500).json({
       success: false,
@@ -83,9 +71,7 @@ exports.analyzeCandidate = async (req, res) => {
 // STEP 12: Get Saved Analysis
 exports.getAnalysis = async (req, res) => {
   try {
-    const application = await Application.findById(
-      req.params.applicationId
-    );
+    const application = await Application.findById(req.params.applicationId);
 
     if (!application) {
       return res.status(404).json({
@@ -99,10 +85,44 @@ exports.getAnalysis = async (req, res) => {
       aiAnalysis: application.aiAnalysis,
     });
   } catch (error) {
-    console.error(
-      "Get Analysis Error:",
-      error
-    );
+    console.error("Get Analysis Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Generate AI Cover Letter
+exports.generateCoverLetter = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.jobId);
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found",
+      });
+    }
+
+    const candidate = await User.findById(req.user.id);
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "Candidate not found",
+      });
+    }
+
+    const coverLetter = await generateCoverLetter(candidate, job);
+
+    return res.status(200).json({
+      success: true,
+      coverLetter,
+    });
+  } catch (error) {
+    console.error("Cover Letter Error:", error);
 
     return res.status(500).json({
       success: false,

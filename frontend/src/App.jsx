@@ -8,8 +8,8 @@ import ApplyJobs from "./pages/ApplyJobs";
 import MyApplications from "./pages/MyApplications";
 import Applicants from "./pages/Applicants";
 import ResumeAnalysis from "./pages/ResumeAnalysis";
-import Analysis from "./pages/Analysis";
 import Interviews from "./pages/Interviews";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -23,8 +23,8 @@ function App() {
         <Route path="/my-applications" element={<MyApplications />} />
         <Route path="/applicants" element={<Applicants />} />
         <Route path="/analysis/:applicationId" element={<ResumeAnalysis />} />
-        <Route path="/analysis/:id" element={<Analysis />} />
         <Route path="/interviews" element={<Interviews />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </BrowserRouter>
   );

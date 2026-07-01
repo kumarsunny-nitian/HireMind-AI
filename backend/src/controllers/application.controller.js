@@ -12,11 +12,6 @@ exports.applyJob = async (req, res) => {
 
     const job = await Job.findById(jobId);
 
-    const jobMatchPercentage =
-      job.skillsRequired.length > 0
-        ? Math.round((matchedSkills.length / job.skillsRequired.length) * 100)
-        : 0;
-
     if (!job) {
       return res.status(404).json({
         success: false,
@@ -43,16 +38,17 @@ exports.applyJob = async (req, res) => {
       job.skillsRequired || [],
     );
 
+    const jobMatchPercentage =
+      job.skillsRequired.length > 0
+        ? Math.round((matchedSkills.length / job.skillsRequired.length) * 100)
+        : 0;
+
     // Debug Logs
-    console.log("CANDIDATE SKILLS:", candidate.parsedSkills);
-    console.log("JOB SKILLS:", job.skillsRequired);
-    console.log("ATS SCORE:", score);
-    console.log("MATCHED SKILLS:", matchedSkills);
 
     const application = await Application.create({
       candidate: req.user.id,
       job: jobId,
-      atsScore,
+      atsScore: score,
       matchedSkills,
       jobMatchPercentage,
     });
@@ -111,11 +107,7 @@ exports.getJobApplicants = async (req, res) => {
       });
     }
 
-    console.log("USER:", req.user);
-    console.log("ROLE:", req.user.role);
-    console.log("JOB RECRUITER:", job.recruiter.toString());
-    console.log("REQUEST USER:", req.user.id);
-
+    
     if (job.recruiter.toString() !== req.user.id && req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
@@ -123,13 +115,43 @@ exports.getJobApplicants = async (req, res) => {
       });
     }
 
-    const applications = await Application.find({
+    // Dynamic filtering and sorting setup
+    const { status, sortBy } = req.query;
+    const query = {
       job: jobId,
-    })
+    };
+
+    if (status && status !== "all") {
+      query.status = status;
+    }
+
+    // Dynamic sorting logic based on query parameter
+    let sortOption = { atsScore: -1 };
+
+    switch (sortBy) {
+      case "newest":
+        sortOption = { createdAt: -1 };
+        break;
+
+      case "oldest":
+        sortOption = { createdAt: 1 };
+        break;
+
+      case "ats":
+        sortOption = { atsScore: -1 };
+        break;
+
+      case "match":
+        sortOption = { jobMatchPercentage: -1 };
+        break;
+
+      default:
+        sortOption = { atsScore: -1 };
+    }
+
+    const applications = await Application.find(query)
       .populate("candidate", "name email resume parsedSkills")
-      .sort({
-        atsScore: -1,
-      });
+      .sort(sortOption);
 
     res.status(200).json({
       success: true,
@@ -219,6 +241,36 @@ exports.getRankedApplicants = async (req, res) => {
       .sort({
         atsScore: -1,
       });
+
+    res.status(200).json({
+      success: true,
+      applications,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.getRecentApplications = async (req, res) => {
+  try {
+    // Find all jobs posted by the recruiter
+    const jobs = await Job.find({
+      recruiter: req.user.id,
+    }).select("_id");
+
+    const jobIds = jobs.map((job) => job._id);
+
+    // Get latest applications
+    const applications = await Application.find({
+      job: { $in: jobIds },
+    })
+      .populate("candidate", "name email")
+      .populate("job", "title company")
+      .sort({ createdAt: -1 })
+      .limit(5);
 
     res.status(200).json({
       success: true,

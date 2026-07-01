@@ -51,9 +51,7 @@ exports.register = async (req, res) => {
       user: userResponse,
     });
   } catch (error) {
-    console.log("REGISTER ERROR:");
-    console.log(error);
-
+    console.error("REGISTER ERROR:", error);
     return res.status(500).json({
       success: false,
       message: "Server Error",
@@ -122,9 +120,7 @@ exports.login = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log("LOGIN ERROR:");
-    console.log(error);
-
+    console.error("LOGIN ERROR:", error);
     return res.status(500).json({
       success: false,
       message: "Server Error",
@@ -147,6 +143,40 @@ exports.getProfile = async (req, res) => {
     });
   }
 };
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const { name, phone, companyName, skills } = req.body;
+
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    user.name = name ?? user.name;
+    user.phone = phone ?? user.phone;
+    user.companyName = companyName ?? user.companyName;
+    user.skills = skills ?? user.skills;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 
 
 

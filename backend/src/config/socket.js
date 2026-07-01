@@ -13,11 +13,7 @@ const initializeSocket = (server) => {
     console.log(`User Connected: ${socket.id}`);
 
     socket.on("join", (userId) => {
-      console.log("JOIN EVENT RECEIVED:", userId);
-
       socket.join(userId);
-
-      console.log(`User joined room ${userId}`);
     });
 
     socket.on("disconnect", () => {

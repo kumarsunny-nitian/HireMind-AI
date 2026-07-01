@@ -3,7 +3,6 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
-const testRoutes = require("./routes/test.routes");
 const jobRoutes = require("./routes/job.routes");
 const applicationRoutes = require("./routes/application.routes");
 const resumeRoutes = require("./routes/resume.routes");
@@ -12,10 +11,6 @@ const interviewRoutes = require("./routes/interview.routes");
 const notificationRoutes = require("./routes/notification.routes");
 const analyticsRoutes = require("./routes/analytics.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
-
-console.log("✅ testRoutes imported");
-console.log("✅ applicationRoutes imported");
-console.log("✅ resumeRoutes imported");
 
 const app = express();
 
@@ -41,9 +36,6 @@ app.use("/api/v1/auth", authRoutes);
 
 // User Routes
 app.use("/api/v1/users", userRoutes);
-
-// Test Routes
-app.use("/api/v1/test", testRoutes);
 
 // Job Routes
 app.use("/api/v1/jobs", jobRoutes);

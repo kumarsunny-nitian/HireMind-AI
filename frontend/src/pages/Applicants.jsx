@@ -3,10 +3,13 @@ import api from "../services/api";
 
 function Applicants() {
   const [applications, setApplications] = useState([]);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("ats");
 
   useEffect(() => {
     fetchApplicants();
-  }, []);
+  }, [statusFilter, sortBy]);
 
   const exportCSV = () => {
     const headers = ["Name", "Email", "ATS Score", "Status"];
@@ -68,11 +71,14 @@ function Applicants() {
 
       const jobId = "6a3a37f66c703e0fce51c607";
 
-      const res = await api.get(`/applications/job/${jobId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const res = await api.get(
+        `/applications/job/${jobId}?status=${statusFilter}&sortBy=${sortBy}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       setApplications(res.data.applications || []);
     } catch (error) {
@@ -80,28 +86,179 @@ function Applicants() {
     }
   };
 
+  const totalApplicants = applications.length;
+
+  const shortlistedCount = applications.filter(
+    (app) => app.status === "shortlisted",
+  ).length;
+
+  const selectedCount = applications.filter(
+    (app) => app.status === "selected",
+  ).length;
+
+  const rejectedCount = applications.filter(
+    (app) => app.status === "rejected",
+  ).length;
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-10">
-      <h1 className="text-3xl font-bold mb-6 dark:text-white">
-        Applicants Management
-      </h1>
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
+          Applicants Management
+        </h1>
 
-      <button
-        onClick={exportCSV}
-        className="
-          mb-6
-          bg-blue-600
-          hover:bg-blue-700
-          text-white
-          px-4
-          py-2
-          rounded-lg
-          font-semibold
-        "
-      >
-        📊 Export CSV
-      </button>
+        <p className="mt-2 text-gray-500 dark:text-gray-400">
+          Manage, review, and track all applicants for this job.
+        </p>
+      </div>
 
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Total Applicants */}
+        <div
+          onClick={() => setStatusFilter("all")}
+          className="
+    bg-white
+    dark:bg-gray-800
+    shadow-lg
+    rounded-xl
+    p-5
+    cursor-pointer
+    hover:shadow-2xl
+    hover:-translate-y-1
+    transition-all
+    duration-300
+  "
+        >
+          {" "}
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
+            👥 Total Applicants
+          </p>
+          <h2 className="text-3xl font-bold text-blue-600 mt-2">
+            {totalApplicants}
+          </h2>
+        </div>
+
+        {/* Shortlisted */}
+        <div
+          onClick={() => setStatusFilter("all")}
+          className="
+    bg-white
+    dark:bg-gray-800
+    shadow-lg
+    rounded-xl
+    p-5
+    cursor-pointer
+    hover:shadow-2xl
+    hover:-translate-y-1
+    transition-all
+    duration-300
+  "
+        >
+          {" "}
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
+            Shortlisted
+          </p>
+          <h2 className="text-3xl font-bold text-yellow-500 mt-2">
+            {shortlistedCount}
+          </h2>
+        </div>
+
+        {/* Selected */}
+        <div
+          onClick={() => setStatusFilter("all")}
+          className="
+    bg-white
+    dark:bg-gray-800
+    shadow-lg
+    rounded-xl
+    p-5
+    cursor-pointer
+    hover:shadow-2xl
+    hover:-translate-y-1
+    transition-all
+    duration-300
+  "
+        >
+          {" "}
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Selected</p>
+          <h2 className="text-3xl font-bold text-green-600 mt-2">
+            {selectedCount}
+          </h2>
+        </div>
+
+        {/* Rejected */}
+        <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6">
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Rejected</p>
+
+          <h2 className="text-3xl font-bold text-red-600 mt-2">
+            {rejectedCount}
+          </h2>
+        </div>
+      </div>
+
+      {/* Filters + Export */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex gap-4">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="
+              border
+              rounded-lg
+              px-4
+              py-2
+              bg-white
+              dark:bg-gray-800
+              dark:text-white
+            "
+          >
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="reviewing">Reviewing</option>
+            <option value="shortlisted">Shortlisted</option>
+            <option value="selected">Selected</option>
+            <option value="rejected">Rejected</option>
+          </select>
+
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="
+              border
+              rounded-lg
+              px-4
+              py-2
+              bg-white
+              dark:bg-gray-800
+              dark:text-white
+            "
+          >
+            <option value="ats">Highest ATS</option>
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="match">Highest Match %</option>
+          </select>
+        </div>
+
+        <button
+          onClick={exportCSV}
+          className="
+            bg-blue-600
+            hover:bg-blue-700
+            text-white
+            px-4
+            py-2
+            rounded-lg
+            font-semibold
+          "
+        >
+          📊 Export CSV
+        </button>
+      </div>
+
+      {/* Table */}
       {applications.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
           <p className="dark:text-white">No applicants found</p>
