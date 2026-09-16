@@ -3,9 +3,6 @@
 An AI-powered MERN Stack recruitment platform that helps recruiters hire better candidates using ATS scoring, AI resume analysis, resume parsing, and AI-generated cover letters.
 
 🌐 **Live Demo:** https://hire-mind-ai-beta.vercel.app/
-
-🔗 **Backend API:** https://hiremind-ai-r2pu.onrender.com/
-
 ---
 
 ## 🚀 Features
@@ -138,113 +135,6 @@ npm run dev
 
 ---
 
-# 🔑 Environment Variables
-
-## Backend (.env)
-
-```env
-PORT=5001
-
-MONGO_URI=
-
-JWT_SECRET=
-
-CLOUDINARY_CLOUD_NAME=
-
-CLOUDINARY_API_KEY=
-
-CLOUDINARY_API_SECRET=
-
-OPENAI_API_KEY=
-
-EMAIL_USER=
-
-EMAIL_PASS=
-
-REDIS_HOST=
-
-REDIS_PORT=
-```
-
----
-
-## Frontend (.env)
-
-```env
-VITE_API_URL=http://localhost:5001/api/v1
-
-VITE_SOCKET_URL=http://localhost:5001
-```
-
----
-
-# 📸 Screenshots
-
-### Login Page
-
-(Add Screenshot)
-
----
-
-### Candidate Dashboard
-
-(Add Screenshot)
-
----
-
-### Recruiter Dashboard
-
-(Add Screenshot)
-
----
-
-### Job Listings
-
-(Add Screenshot)
-
----
-
-### AI Resume Analysis
-
-(Add Screenshot)
-
----
-
-### AI Cover Letter Generator
-
-(Add Screenshot)
-
----
-
-# 📈 Workflow
-
-```
-Candidate
-     │
-     ▼
-Upload Resume
-     │
-     ▼
-Resume Parsing
-     │
-     ▼
-ATS Score
-     │
-     ▼
-AI Resume Analysis
-     │
-     ▼
-Apply Job
-     │
-     ▼
-Recruiter Dashboard
-     │
-     ▼
-Shortlist / Reject / Select
-```
-
----
-
 # ✨ Future Improvements
 
 - AI Skill Gap Analysis
@@ -256,20 +146,4 @@ Shortlist / Reject / Select
 
 ---
 
-# 👨‍💻 Author
 
-**Sunny Kumar**
-
-B.Tech CSE
-
-National Institute of Technology Rourkela
-
-GitHub: https://github.com/kumarsunny-nitian
-
-LinkedIn: (Add Your LinkedIn)
-
----
-
-# ⭐ If you like this project
-
-Please give it a ⭐ on GitHub.
